@@ -161,6 +161,5 @@ cython_debug/
 
 
 # Data
-.data/
-
-eda copy.ipynb
+data/
+stored_faces/
