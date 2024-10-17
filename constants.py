@@ -1,0 +1,1 @@
+IMG_WIDTH = 320 #Max pixel width of reference image 

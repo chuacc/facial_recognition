@@ -3,7 +3,9 @@ import logging
 import os
 
 import cv2
+import faiss
 import insightface
+import numpy as np
 import pandas as pd
 from insightface.app.common import Face
 from insightface.model_zoo import model_zoo
@@ -47,7 +49,7 @@ else:
 
     for name, img_file in zip(name_list, img_list):
 
-        if os.path.isfile(img_file):
+        if os.path.isfile(str(img_file)):
             img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
             (h, w) = img.shape[:2]
             aspect_ratio = w / h
@@ -72,7 +74,17 @@ else:
             else:
                 logging.warning(f'More than one face detect in file:{img_file}')
         else:
-            logging.error
-    logging.info(f'Len of ref_names: {len(name_list)}')
-    logging.info(f'len of embeddings: {len(ref_embeddings)}')
+            logging.error(f'File not found for {name}')
+    logging.info(f'Length of ref_names: {len(name_list)}')
+    logging.info(f'Length of embeddings: {len(ref_embeddings)}')
+    if len(name_list) != len(ref_embeddings):
+        logging.warning('Length of embedding and names do not match!!!')
+    else:
+        ref_embeddings = np.asarray(ref_embeddings)
+        index =faiss.IndexFlatL2(ref_embeddings.shape[1])
+        index.add(ref_embeddings)
+        faiss.write_index(index,'./data/faiss_index.bin')
+        logging.info(f'Quantity of image embeddings create and stored into vector store: {index.ntotal}')
+
+
         
