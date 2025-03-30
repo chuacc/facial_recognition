@@ -20,13 +20,32 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f","--filename", type=str,
                     help="CSV file of reference data", required= True)
 
+parser.add_argument("-pd","--photodir", type=str,
+                    help="photo directory", required= True)
 args = parser.parse_args()
-# Load the CSV containing the names and their respective photo filename
-df = pd.read_csv(args.filename, header=None)
 
-# Get the names and images to be embedded into list
-name_list = df[0].to_list()
-img_list = df[1].to_list()
+identities = [d for d in os.listdir(args.photodir) if os.path.isdir(os.path.join(args.photodir, d))]
+name_list = []
+img_path = []
+
+# Get the identities 
+
+for id in identities:
+    path = os.path.join(args.photodir,id)
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    for f in files:
+        file_path = os.path.join(path,f)
+        name_list.append(id)
+        img_path.append(file_path)
+
+
+df = pd.DataFrame({'Name': name_list, 'file_path': img_path})
+df.to_csv('output.csv', index=False)
+
+
+
+
+
 
 
 det_model_path = './model/buffalo_s/det_500m.onnx'
@@ -38,16 +57,16 @@ rec_model = model_zoo.get_model(rec_model_path)
 det_model.prepare(ctx_id=0, input_size=(640, 640), det_thres=0.5)
 
 logging.info(f"name_list: {len(name_list)}")
-logging.info(f"img_list: {len(img_list)}")
+logging.info(f"img_list: {len(img_path)}")
 
 
-if len(name_list) != len(img_list):
+if len(name_list) != len(img_path):
     logging.error('Length of name_list and img_list do not match')
     raise ValueError('The lenght of name_list and img_list do not match')
 
 else:
 
-    for name, img_file in zip(name_list, img_list):
+    for name, img_file in zip(name_list, img_path):
 
         if os.path.isfile(str(img_file)):
             img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
